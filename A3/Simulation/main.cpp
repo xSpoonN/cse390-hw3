@@ -2,7 +2,7 @@
 // #include "Simulation/Simulator.h"
 // #include "AlgorithmCommon/MyAlgorithm.h"
 #include "../Common/AlgorithmRegistrar.h"
-#ifdef _WIN32 
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
