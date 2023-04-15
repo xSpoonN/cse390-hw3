@@ -4,17 +4,52 @@
 
 #pragma once
 
-#include "../Common/AbstractAlgorithm.h"
+#include <vector>
+#include <unordered_set>
+#include <unordered_map>
+#include <iterator>
+#include <string>
+#include <algorithm>
+#include <iostream>
 
-class MyAlgorithm: public AbstractAlgorithm{
-    std::size_t maxSteps;
-    const WallsSensor *WSensor = nullptr;
-    const DirtSensor *DSensor = nullptr;
-    const BatteryMeter *BMeter = nullptr;
+#include "../common/AbstractAlgorithm.h"
+#include "Position.h"
+#include "Node.h"
+
+using std::size_t;
+using std::vector;
+using std::pair;
+using std::unordered_set;
+using std::unordered_map;
+using std::shared_ptr;
+using std::cout;
+
+class MyAlgorithm : public AbstractAlgorithm {
+    size_t maxSteps;
+    size_t remainingSteps;
+    const WallsSensor* WSensor = nullptr;
+    const DirtSensor* DSensor = nullptr;
+    const BatteryMeter* BMeter = nullptr;
+
+    Node start;
+    vector<Step> path; /* A path back to the charger */
+    unordered_set<Position, PositionHasher> mapped; /* Vector of nodes the robot knows about */
+    unordered_set<Position, PositionHasher> visited; /* Vector of nodes the robot has visited */
+    unordered_map<Position, vector<Step>, PositionHasher> returnPath; /* Map of the most efficient return path from each node. */
+    vector<Step> returnQ; /* A queue of Steps to return to the charger */
+    vector<Step> resumePath; /* A path back to the previous position */
+    Position curPos; /* This is redundant most of the time but helps a LOT with the return algorithm */
+    shared_ptr<Node> c; /* Current node */
+    size_t starting_battery;
+    bool f; /* True if finished, false otherwise */
+    bool returnOverride;
 public:
+
+    MyAlgorithm();
 
     void setMaxSteps(std::size_t maxSteps) override {
         this->maxSteps = maxSteps;
+        this->remainingSteps = maxSteps;
     }
     void setWallsSensor(const WallsSensor& wallsSensor) override {
         this->WSensor = &wallsSensor;
@@ -24,7 +59,7 @@ public:
     }
     void setBatteryMeter(const BatteryMeter& batteryMeter) override {
         this->BMeter = &batteryMeter;
+        this->starting_battery = BMeter->getBatteryState();
     }
-    // TODO : Complete in cpp file
     Step nextStep() override;
 };
