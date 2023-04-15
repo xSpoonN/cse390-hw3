@@ -2,7 +2,11 @@
 // #include "Simulation/Simulator.h"
 // #include "AlgorithmCommon/MyAlgorithm.h"
 #include "../Common/AlgorithmRegistrar.h"
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dlfcn.h>
+#endif
 
 using AlgorithmPtr = std::unique_ptr<AlgorithmRegistrar>;
 
@@ -14,21 +18,35 @@ int main(int argc, char **argv)
     //       make sure you load all algorithms in the proper folder and not only two.
 
     // Load algorithm library
-    void *algorithm_handle1 = dlopen("Algorithm_1_123456789/libAlgorithm_1_123456789.so", RTLD_LAZY);
-    if (!algorithm_handle1)
-    {
+#ifdef _WIN32
+    HMODULE algorithm_handle1 = LoadLibraryA("Algorithm_1_123456789\\Algorithm_1_123456789.dll");
+    if (!algorithm_handle1) {
+        std::cerr << "Error loading algorithm library: " << GetLastError() << std::endl;
+        return 1;
+    }
+
+    HMODULE algorithm_handle2 = LoadLibraryA("Algorithm_2_123456789\\Algorithm_2_123456789.dll");
+    if (!algorithm_handle2) {
+        std::cerr << "Error loading algorithm library: " << GetLastError() << std::endl;
+        AlgorithmRegistrar::getAlgorithmRegistrar().clear();
+        FreeLibrary(algorithm_handle1);
+        return 1;
+    }
+#else
+    algorithm_handle1 = dlopen("Algorithm_1_123456789/libAlgorithm_1_123456789.so", RTLD_LAZY);
+    if (!algorithm_handle1) {
         std::cerr << "Error loading algorithm library: " << dlerror() << std::endl;
         return 1;
     }
 
-    void *algorithm_handle2 = dlopen("Algorithm_2_123456789/libAlgorithm_2_123456789.so", RTLD_LAZY);
-    if (!algorithm_handle2)
-    {
+    algorithm_handle2 = dlopen("Algorithm_2_123456789/libAlgorithm_2_123456789.so", RTLD_LAZY);
+    if (!algorithm_handle2) {
         std::cerr << "Error loading algorithm library: " << dlerror() << std::endl;
         AlgorithmRegistrar::getAlgorithmRegistrar().clear();
         dlclose(algorithm_handle1);
         return 1;
     }
+#endif
 
     for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
         auto algorithm = algo.create();
@@ -36,6 +54,12 @@ int main(int argc, char **argv)
     }
 
     AlgorithmRegistrar::getAlgorithmRegistrar().clear();
+#ifdef _WIN32
+    FreeLibrary(algorithm_handle1);
+    FreeLibrary(algorithm_handle2);
+#else
     dlclose(algorithm_handle1);
     dlclose(algorithm_handle2);
+#endif
+    return 0;
 }
