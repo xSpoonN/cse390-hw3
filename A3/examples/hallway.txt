@@ -1,0 +1,11 @@
+Hallway
+MaxSteps =                    500
+MaxBattery=100
+Rows =5
+Cols= 8
+70412432g
+101132W7g
+WWWW4WW5g
+102449W1gg
+02D005W0g
+fgjfghfjh

@@ -1,0 +1,5 @@
+NumSteps = 49
+DirtLeft = 150
+Status = FINISHED
+Steps:
+NNssSEEssssssssENsssssssSEEsssssssEEssNSWWWWWWWSF

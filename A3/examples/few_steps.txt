@@ -1,0 +1,12 @@
+Few Steps
+MaxSteps=50
+MaxBattery=100
+Rows=8
+Cols=8
+3WW8WWW3
+  9008 3
+D 11W WW
+3434W999
+  50W999
+3434W999
+  50W999

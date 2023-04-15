@@ -1,0 +1,6 @@
+Empty House
+MaxSteps=1000
+MaxBattery=50
+Rows=10
+Cols=10
+D
