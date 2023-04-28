@@ -20,6 +20,8 @@ int main(int argc, char **argv) {
     //       make sure you load all algorithms in the proper folder and not only two.
 
     // Load algorithm library
+
+    // Why do we have this if it checks the folder anyway?
 #ifdef _WIN32
     HMODULE algorithm_handle1 = LoadLibraryA("Algorithm_1_123456789\\Algorithm_1_123456789.dll");
     if (!algorithm_handle1) {
@@ -35,7 +37,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 #else
-    algorithm_handle1 = dlopen("Algorithm_1_123456789/libAlgorithm_1_123456789.so", RTLD_LAZY);
+    algorithm_handle1 = dlopen("Algorithm_1_123456789/libAlgorithm_1_123456789.so", RTLD_LAZY); // do these need types
     if (!algorithm_handle1) {
         std::cerr << "Error loading algorithm library: " << dlerror() << std::endl;
         return 1;
@@ -79,16 +81,17 @@ int main(int argc, char **argv) {
     std::filesystem::path algoPath(algo_path);
     std::vector<void*> libraries;
     for (const auto& entry : std::filesystem::directory_iterator(algoPath)) {
-        if (entry.is_regular_file() && (entry.path().extension() == ".dll" || entry.path().extension() == ".so")) {
 #ifdef _WIN32
+        if (entry.is_regular_file() && entry.path().extension() == ".dll") {
             HMODULE algorithm_handle = LoadLibraryA(entry.path().string().c_str());
-            if (!algorithm_handle1) {
+            if (!algorithm_handle1) { // this checks algorithm_handle1, intended?
                 std::cerr << "Error loading algorithm library: " << GetLastError() << std::endl;
                 return 1;
             }
 #else
+        if (entry.is_regular_file() && entry.path().extension() == ".so") {
             algorithm_handle = dlopen(entry.path().string().c_str(), RTLD_LAZY);
-            if (!algorithm_handle1) {
+            if (!algorithm_handle1) { // this checks algorithm_handle1, intended?
                 std::cerr << "Error loading algorithm library: " << dlerror() << std::endl;
                 return 1;
             }
