@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cstring>
 #include <filesystem>
 #include "../Common/AlgorithmRegistrar.h"
@@ -39,13 +40,24 @@ int main(int argc, char** argv) {
     std::vector<void*> libraries;
     for (const auto& entry : std::filesystem::directory_iterator(algoPath)) {
         if (entry.is_regular_file() && entry.path().extension() == ".so") {
+            const auto& prevSize = AlgorithmRegistrar::getAlgorithmRegistrar().end();
             void* algorithm_handle = dlopen(entry.path().string().c_str(), RTLD_LAZY);
+            std::string error_out = entry.path().string().substr(0, entry.path().string().find_last_of(".")) + ".error";
+            std::size_t lastSlash = error_out.find_last_of("/\\"); /* Removes the preceding path from algo.error */
+            if (lastSlash != std::string::npos) error_out = error_out.substr(lastSlash + 1);
             if (!algorithm_handle) {
-                std::cerr << "Error loading algorithm library: " << dlerror() << std::endl;
-                return 1;
+                std::ofstream err_outfile(error_out); 
+                string err = dlerror();
+                err_outfile << "Error loading algorithm library: " << err << std::endl;
+                std::cerr << "Error loading algorithm library: " << err << std::endl;
+            } else if (AlgorithmRegistrar::getAlgorithmRegistrar().end() == prevSize) {
+                std::ofstream err_outfile(error_out);
+                err_outfile << "Error loading algorithm library: No Algorithm Registered!" << std::endl;
+                std::cerr << "Error loading algorithm library: No Algorithm Registered!" << std::endl;
+            } else {
+                std::cerr << "Found an algo" << std::endl;
+                libraries.push_back(algorithm_handle); 
             }
-            std::cerr << "Found an algo" << std::endl;
-            libraries.push_back(algorithm_handle);
         }
     }
 
