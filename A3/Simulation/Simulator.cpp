@@ -6,7 +6,7 @@
 #include "include/Simulator.h"
 #include "../Common/Symbols.h"
 
-#define err(msg) do { cout << msg << endl; file.close(); return; } while (false)
+#define err(msg) do { std::ofstream err_outfile(error_out); cout << msg << endl; err_outfile << msg << endl; file.close(); return; } while (false)
 
 using std::cout;
 using std::endl;
@@ -104,6 +104,9 @@ inline void Simulator::generate_outfile(string status, const vector<char>& steps
 void Simulator::readHouseFile(const string& houseFilePath) {
 	/* Attempt to open the file. */
 	std::ifstream file(houseFilePath);
+	std::string error_out = houseFilePath.substr(0, houseFilePath.find_last_of(".")) + ".error";
+	std::size_t lastSlash = error_out.find_last_of("/\\"); /* Removes the preceding path from house.error */
+	if (lastSlash != std::string::npos) error_out = error_out.substr(lastSlash + 1);
 	if (!file.is_open()) err("Invalid File given");
 	string line, value;
 	std::getline(file, line); /* Ignore first line */
@@ -261,7 +264,7 @@ void Simulator::run(const std::string& out_path) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(step_time));
 		}
 	}
-	
+
 	/* Robot ran out of steps or battery */
 	generate_outfile(current_battery == 0 ? "DEAD" : "WORKING", step_vector, out_path);
 }
