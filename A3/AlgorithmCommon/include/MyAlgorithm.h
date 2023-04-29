@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <compare>
 
 #include "../../Common/AbstractAlgorithm.h"
 #include "Position.h"

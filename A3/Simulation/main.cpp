@@ -58,13 +58,9 @@ int main(int argc, char** argv) {
         
     }
 
-    /* Free .dll/.so */
-    for (void* lib : libraries) {
-        dlclose(lib);
-    }
-
-    for(auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
-        for (auto& house : houses) {
+    for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
+        for (const auto& house : houses) {
+            std::cout << "Running algo " << algo.name() << " on house " << house << std::endl;
             Simulator sim;
             sim.readHouseFile(house);
             sim.setAlgorithm(*(algo.create().get()));
@@ -73,7 +69,11 @@ int main(int argc, char** argv) {
     }
 
     AlgorithmRegistrar::getAlgorithmRegistrar().clear();
-    // dlclose(algorithm_handle1);
-    // dlclose(algorithm_handle2);
+
+    /* Free .dll/.so */
+    for (void *lib : libraries)
+    {
+        dlclose(lib);
+    }
     return 0;
 }

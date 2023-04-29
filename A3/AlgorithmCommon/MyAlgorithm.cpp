@@ -2,7 +2,7 @@
 // Created by Anshuman Funkwal on 3/13/23.
 //
 
-#include "MyAlgorithm.h"
+#include "include/MyAlgorithm.h"
 
 inline Step opposite(Step dir) {
 	switch (dir) {
