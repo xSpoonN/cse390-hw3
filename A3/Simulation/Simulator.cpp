@@ -87,6 +87,14 @@ inline void Simulator::generate_outfile(string status, const vector<char>& steps
 	outfile << "NumSteps = " << current_steps << endl;
 	outfile << "DirtLeft = " << remaining_dirt << endl;
 	outfile << "Status = " << status << endl;
+	outfile << "InDock = " << ((current_row == dock_row && current_col == dock_col) ? "TRUE" : "FALSE") << endl;
+
+	int score = 0; /* Calc Score */
+	if (status == "DEAD") score = max_steps + remaining_dirt*300 + 2000;
+	else if (status == "Finished" && !(current_row == dock_row && current_col == dock_col)) score = max_steps + remaining_dirt*300 + 3000;
+	else score = current_steps + remaining_dirt*300 + ((current_row == dock_row && current_col == dock_col) ? 0 : 1000);
+
+	outfile << "Score = " << score << endl;
 	outfile << "Steps:" << endl;
 	for (char c : steps) outfile << c;
 	//outfile << endl;
@@ -120,37 +128,33 @@ void Simulator::readHouseFile(const string& houseFilePath) {
 	/* Parse house */
 	bool start_defined = false;
 	for (size_t row = 0; row < num_rows; row++) {
-		/* Not enough rows - fill in remainer with blank rows */
-		if (!std::getline(file, line)) {
+		if (!std::getline(file, line)) { /* Not enough rows - fill in remainer with blank rows */
 			while (row++ < num_rows)
 				model.push_back(vector<char>(num_cols, Sym::DIRT0));
 			break;
 		}
+
 		/* Read row in */
 		vector<char> rowvec(num_cols);
 		rowvec.clear();
 		for (size_t col = 0; col < num_cols; col++) {
-			/* Not enough chars - fill in remainder with spaces */
-			if (col >= line.length()) {
+			if (col >= line.length()) { /* Not enough chars - fill in remainder with spaces */
 				while (col++ < num_cols)
 					rowvec.push_back(Sym::DIRT0);
 				break;
 			}
 			char c = line[col];
-			/* Validate char */
 			if (!Sym::is_valid(c)) err("Invalid char in input: " << c);
-			/* Any '0' should be standardized to ' ' */
-			if (c == Sym::ZERO) rowvec.push_back(Sym::DIRT0);
+			if (c == Sym::ZERO) rowvec.push_back(Sym::DIRT0); /* Any '0' should be standardized to ' ' */
 			else {
 				if (Sym::is_dirt(c)) remaining_dirt += Sym::get_dirt_level(c);
 				rowvec.push_back(c);
 			}
-			/* If this is the charger, set position */
-			if (c == Sym::CHARGER) {
+			if (c == Sym::CHARGER) { /* If this is the charger, set position */
 				if (!start_defined) {
 					start_defined = true;
-					current_row = row;
-					current_col = col;
+					current_row = dock_row = row;
+					current_col = dock_col = col;
 				}
 				else err("Multiple dockers detected!");
 			}
@@ -158,11 +162,9 @@ void Simulator::readHouseFile(const string& houseFilePath) {
 		model.push_back(rowvec);
 	}
 
-	/* Verify that there was a charger */
-	if (!start_defined) err("Start position not defined!");
+	if (!start_defined) err("Start position not defined!"); /* Verify that there was a charger */
 
 	// cout << "Initial house:" << endl; printhouse();
-
 	file_processed = true;
 }
 
@@ -171,20 +173,25 @@ void Simulator::run(const std::string& out_path) {
 	if (!file_processed) return;
 	const bool debug = false;
 	const int step_time = 200;
+	
 	/* Save space for storing steps to be printed at the end */
 	vector<char> step_vector(max_steps);
 	step_vector.clear();
+
 	/* Set up initial values */
 	current_steps = 0;
 	current_battery = max_battery;
+
 	/* Enter main cleaning loop */
 	while (current_steps < max_steps && current_battery > 0) {
 		++current_steps;
+
 		/* If the current space has dirt, clean it */
 		if (Sym::get_dirt_level(model[current_row][current_col]) > 0) {
 			Sym::decrement_dirt(model[current_row][current_col]);
 			--remaining_dirt;
 		}
+
 		/* Update current position based on Step received */
 		Step dir = algo->nextStep();
 		if (model[current_row][current_col] != Sym::CHARGER || dir != Step::Stay) --current_battery;
@@ -228,7 +235,6 @@ void Simulator::run(const std::string& out_path) {
 			break;
 		case Step::Stay:
 			step_vector.push_back('s');
-			/* Linter yells at the following line, there is nothing wrong with it and it was just used for debugging. */
 			if (debug && Sym::get_dirt_level(model[current_row][current_col]) == 0 && model[current_row][current_col] != Sym::CHARGER) {
 				cout << "Told to stay still without cleaning/charging!" << endl;
 			}
@@ -242,17 +248,20 @@ void Simulator::run(const std::string& out_path) {
 			}
 			return;
 		}
+
 		/* If at the dock, begin charging */
 		if (model[current_row][current_col] == Sym::CHARGER) {
 			if (debug) cout << "Charging..." << endl;
 			current_battery = std::min(current_battery + round_up(max_battery, 20), max_battery); /* Charging algorithm */
 		}
+
 		/* If debug is on, print matrix to console and possibly wait */
 		if (debug && step_time >= 0) {
 			printhouse();
 			std::this_thread::sleep_for(std::chrono::milliseconds(step_time));
 		}
 	}
+	
 	/* Robot ran out of steps or battery */
 	generate_outfile(current_battery == 0 ? "DEAD" : "WORKING", step_vector, out_path);
 }

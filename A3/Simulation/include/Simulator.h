@@ -1,23 +1,17 @@
-//
-// Created by Anshuman Funkwal on 3/13/23.
-//
-
 #pragma once
 
 #include <string>
 #include <vector>
 #include "../../Common/AbstractAlgorithm.h"
 
-
 using std::vector;
 using std::size_t;
 using std::string;
 using house = vector<vector<char>>;
 
-// You may want to add additional classes for simulation but you should have a Simulator class.
-// You can use the below suggestion or alternatively implement concrete class for each sensor.
 class Simulator : public WallsSensor, public DirtSensor, public BatteryMeter {
     AbstractAlgorithm* algo = nullptr;
+
     /* Input info */
     bool file_processed = false;
     size_t max_steps;
@@ -25,11 +19,15 @@ class Simulator : public WallsSensor, public DirtSensor, public BatteryMeter {
     size_t num_rows;
     size_t num_cols;
     house model;
+
     /* Robot data */
     size_t current_steps = 0;
     size_t current_battery = 0;
     size_t current_row = 0;
     size_t current_col = 0;
+    size_t dock_row = 0;
+    size_t dock_col = 0;
+
     /* Helper functions */
     size_t remaining_dirt = 0;
     void generate_outfile(string, const vector<char>&, const string&);

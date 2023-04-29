@@ -4,20 +4,11 @@
 #include "../Common/AlgorithmRegistrar.h"
 #include <dlfcn.h>
 #include "./include/Simulator.h"
-// #include "AlgorithmCommon/MyAlgorithm.h"
 
-using AlgorithmPtr = std::unique_ptr<AlgorithmRegistrar>;
+/* using AlgorithmPtr = std::unique_ptr<AlgorithmRegistrar>; */
 using std::string;
 
-// getting command line arguments for the house file
 int main(int argc, char** argv) {
-
-    // TODO: Create the simulator, move the code loading the algorithms into simulator class, 
-    //       make sure you load all algorithms in the proper folder and not only two.
-
-    // Load algorithm library
-
-
     std::string house_path = "./";
     std::string algo_path = "./";
 
@@ -33,7 +24,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    /* Load Houses*/
+    /* Load Houses */
     std::filesystem::path housePath(house_path);
     std::vector<string> houses;
     for (const auto& entry : std::filesystem::directory_iterator(housePath)) {
@@ -43,7 +34,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    /* Load Algorithms .dll/.so */
+    /* Load Algorithms */
     std::filesystem::path algoPath(algo_path);
     std::vector<void*> libraries;
     for (const auto& entry : std::filesystem::directory_iterator(algoPath)) {
@@ -54,31 +45,26 @@ int main(int argc, char** argv) {
                 return 1;
             }
             std::cerr << "Found an algo" << std::endl;
-            libraries.push_back(algorithm_handle); // This line might not be needed, gotta research how these so/dlls work
+            libraries.push_back(algorithm_handle);
         }
     }
 
-    int i = 0;
+    /* Run Simulation */
     for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
         for (const auto& house : houses) {
             std::cout << "Running algo " << algo.name() << " on house " << house << std::endl;
             Simulator sim;
             sim.readHouseFile(house);
-            std::cout << "Before" << "\n";
             std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
             sim.setAlgorithm(*algorithm);
-            std::cout << "After" << "\n";
-            std::string out_file = "out" + std::to_string(i++) + ".txt";
+            std::string out_file = house.substr(0, house.find_last_of(".")) + "-" + algo.name() + ".txt";
             sim.run(out_file);
         }
     }
 
+    /* Free Libraries*/
     AlgorithmRegistrar::getAlgorithmRegistrar().clear();
+    for (void *lib : libraries) dlclose(lib);
 
-    /* Free .dll/.so */
-    for (void *lib : libraries)
-    {
-        dlclose(lib);
-    }
     return 0;
 }
