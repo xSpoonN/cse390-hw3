@@ -21,8 +21,7 @@ int main(int argc, char **argv) {
 
     // Load algorithm library
 
-    // Why do we have this if it checks the folder anyway?
-#ifdef _WIN32
+/* #ifdef _WIN32
     HMODULE algorithm_handle1 = LoadLibraryA("Algorithm_1_123456789\\Algorithm_1_123456789.dll");
     if (!algorithm_handle1) {
         std::cerr << "Error loading algorithm library: " << GetLastError() << std::endl;
@@ -50,7 +49,7 @@ int main(int argc, char **argv) {
         dlclose(algorithm_handle1);
         return 1;
     }
-#endif
+#endif */
     std::string house_path = "";
     std::string algo_path = "";
 
@@ -84,14 +83,14 @@ int main(int argc, char **argv) {
 #ifdef _WIN32
         if (entry.is_regular_file() && entry.path().extension() == ".dll") {
             HMODULE algorithm_handle = LoadLibraryA(entry.path().string().c_str());
-            if (!algorithm_handle1) { // this checks algorithm_handle1, intended?
+            if (!algorithm_handle) {
                 std::cerr << "Error loading algorithm library: " << GetLastError() << std::endl;
                 return 1;
             }
 #else
         if (entry.is_regular_file() && entry.path().extension() == ".so") {
             algorithm_handle = dlopen(entry.path().string().c_str(), RTLD_LAZY);
-            if (!algorithm_handle1) { // this checks algorithm_handle1, intended?
+            if (!algorithm_handle) {
                 std::cerr << "Error loading algorithm library: " << dlerror() << std::endl;
                 return 1;
             }
@@ -129,11 +128,11 @@ int main(int argc, char **argv) {
 
     AlgorithmRegistrar::getAlgorithmRegistrar().clear();
 #ifdef _WIN32
-    FreeLibrary(algorithm_handle1);
-    FreeLibrary(algorithm_handle2);
+    // FreeLibrary(algorithm_handle);
+    // FreeLibrary(algorithm_handle);
 #else
-    dlclose(algorithm_handle1);
-    dlclose(algorithm_handle2);
+    // dlclose(algorithm_handle1);
+    // dlclose(algorithm_handle2);
 #endif
     return 0;
 }
