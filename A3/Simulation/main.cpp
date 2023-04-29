@@ -3,7 +3,7 @@
 #include <filesystem>
 #include "../Common/AlgorithmRegistrar.h"
 #include <dlfcn.h>
-// #include "Simulation/Simulator.h"
+#include "./include/Simulator.h"
 // #include "AlgorithmCommon/MyAlgorithm.h"
 
 using AlgorithmPtr = std::unique_ptr<AlgorithmRegistrar>;
@@ -67,12 +67,13 @@ int main(int argc, char** argv) {
         dlclose(lib);
     }
 
-    for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
-        auto algorithm = algo.create();
-        /* delete */
-        std::cout << algo.name() << ": " << static_cast<int>(algorithm->nextStep()) << std::endl;
-        /* ****** */
-        /* make new simulator instance and run the algo on input. */
+    for(auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
+        for (auto& house : houses) {
+            Simulator sim;
+            sim.readHouseFile(house);
+            sim.setAlgorithm(*(algo.create().get()));
+            sim.run();
+        }
     }
 
     AlgorithmRegistrar::getAlgorithmRegistrar().clear();
