@@ -3,7 +3,7 @@
 #include <chrono>
 #include <thread>
 
-#include "Simulator.h"
+#include "include/Simulator.h"
 #include "../Common/Symbols.h"
 
 #define err(msg) do { cout << msg << endl; file.close(); return; } while (false)

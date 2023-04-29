@@ -6,7 +6,7 @@
 
 #include <string>
 #include <vector>
-#include "../Common/AbstractAlgorithm.h"
+#include "../../Common/AbstractAlgorithm.h"
 
 
 using std::vector;

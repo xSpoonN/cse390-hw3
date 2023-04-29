@@ -11,10 +11,12 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+#include <memory>
 
-#include "../common/AbstractAlgorithm.h"
+#include "../../Common/AbstractAlgorithm.h"
 #include "Position.h"
 #include "Node.h"
+
 
 using std::size_t;
 using std::vector;

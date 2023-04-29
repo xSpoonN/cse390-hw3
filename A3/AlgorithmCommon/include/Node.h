@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../Common/common_types.h"
+#include "../../Common/common_types.h"
 #include "Position.h"
 
 using std::vector;
