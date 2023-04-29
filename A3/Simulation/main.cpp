@@ -18,8 +18,8 @@ int main(int argc, char** argv) {
     // Load algorithm library
 
 
-    std::string house_path = "";
-    std::string algo_path = "";
+    std::string house_path = "./";
+    std::string algo_path = "./";
 
     /* Parse Command Line Arguments */
     for (int i = 1; i < argc; i++) {
@@ -29,10 +29,6 @@ int main(int argc, char** argv) {
         else if (std::strstr(argv[i], "-algo_path=") == argv[i]) {
             algo_path = std::string(argv[i]).substr(std::strlen("-algo_path="));
         }
-    }
-    if (house_path == "" || algo_path == "") {
-		std::cerr << "Error: Missing arguments" << std::endl;
-		return 1;
     }
 
     /* Load Houses*/
