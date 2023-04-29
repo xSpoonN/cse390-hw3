@@ -3,6 +3,7 @@
 //
 
 #include "include/MyAlgorithm.h"
+#include "../AlgorithmCommon/AlgorithmRegistration.h"
 
 inline Step opposite(Step dir) {
 	switch (dir) {
@@ -137,3 +138,5 @@ Step MyAlgorithm::nextStep() {
 
 	return choice[ind];
 }
+
+REGISTER_ALGORITHM(MyAlgorithm);

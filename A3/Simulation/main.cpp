@@ -24,9 +24,11 @@ int main(int argc, char** argv) {
     /* Parse Command Line Arguments */
     for (int i = 1; i < argc; i++) {
         if (std::strstr(argv[i], "-house_path=") == argv[i]) {
+            std::cerr << "House path found" << std::endl;
             house_path = std::string(argv[i]).substr(std::strlen("-house_path="));
         }
         else if (std::strstr(argv[i], "-algo_path=") == argv[i]) {
+            std::cerr << "Algo path found" << std::endl;
             algo_path = std::string(argv[i]).substr(std::strlen("-algo_path="));
         }
     }
@@ -36,6 +38,7 @@ int main(int argc, char** argv) {
     std::vector<string> houses;
     for (const auto& entry : std::filesystem::directory_iterator(housePath)) {
         if (entry.is_regular_file() && (entry.path().extension() == ".house")) {
+            std::cerr << "Found a house" << std::endl;
             houses.push_back(entry.path().string().c_str());
         }
     }
@@ -50,6 +53,7 @@ int main(int argc, char** argv) {
                 std::cerr << "Error loading algorithm library: " << dlerror() << std::endl;
                 return 1;
             }
+            std::cerr << "Found an algo" << std::endl;
             libraries.push_back(algorithm_handle); // This line might not be needed, gotta research how these so/dlls work
         }
     }
