@@ -6,3 +6,4 @@
 /.vs
 /A3/out/build/x64-Debug
 /A3/build
+A3/.vscode/c_cpp_properties.json
