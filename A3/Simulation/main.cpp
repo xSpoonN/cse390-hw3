@@ -58,16 +58,15 @@ int main(int argc, char** argv) {
         }
     }
 
-    for (void* lib : libraries) { // This block might not be needed, gotta research how these so/dlls work
-        
-    }
-
     for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
         for (const auto& house : houses) {
             std::cout << "Running algo " << algo.name() << " on house " << house << std::endl;
             Simulator sim;
             sim.readHouseFile(house);
-            sim.setAlgorithm(*(algo.create().get()));
+            std::cout << "Before" << "\n";
+            std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
+            sim.setAlgorithm(*algorithm);
+            std::cout << "After" << "\n";
             sim.run();
         }
     }

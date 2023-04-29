@@ -1,6 +1,7 @@
 #pragma once
 
 #include <limits>
+#include <climits>
 
 using std::size_t;
 
