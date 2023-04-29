@@ -78,8 +78,8 @@ static inline size_t round_up(size_t x, int y) {
 	return (x / y) + ((x % y) != 0 ? 1 : 0);
 }
 
-inline void Simulator::generate_outfile(string status, const vector<char>& steps) {
-	std::ofstream outfile("out.txt", std::fstream::trunc);
+inline void Simulator::generate_outfile(string status, const vector<char>& steps, const string& out_path) {
+	std::ofstream outfile(out_path, std::fstream::trunc);
 	if (!outfile.is_open()) {
 		cout << "Simulation finished, but the program failed to open output file" << endl;
 		return;
@@ -236,7 +236,7 @@ void Simulator::run() {
 		case Step::Finish:
 			++current_battery;
 			step_vector.push_back('F');
-			generate_outfile("FINISHED", step_vector);
+			generate_outfile("FINISHED", step_vector, "out.txt");
 			if (debug && step_time >= 0) {
 				printhouse();
 			}
@@ -254,7 +254,7 @@ void Simulator::run() {
 		}
 	}
 	/* Robot ran out of steps or battery */
-	generate_outfile(current_battery == 0 ? "DEAD" : "WORKING", step_vector);
+	generate_outfile(current_battery == 0 ? "DEAD" : "WORKING", step_vector, "out.txt");
 }
 
 bool Simulator::isWall(Direction d) const {

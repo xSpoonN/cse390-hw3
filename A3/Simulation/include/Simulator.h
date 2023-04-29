@@ -32,7 +32,7 @@ class Simulator : public WallsSensor, public DirtSensor, public BatteryMeter {
     size_t current_col = 0;
     /* Helper functions */
     size_t remaining_dirt = 0;
-    void generate_outfile(string, const vector<char>&);
+    void generate_outfile(string, const vector<char>&, const string&);
     void printhouse();
 public:
     void readHouseFile(const string& houseFilePath);
