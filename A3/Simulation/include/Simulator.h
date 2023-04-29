@@ -35,7 +35,7 @@ class Simulator : public WallsSensor, public DirtSensor, public BatteryMeter {
     void generate_outfile(string, const vector<char>&, const string&);
     void printhouse();
 public:
-    void readHouseFile(const string& houseFilePath);
+    void readHouseFile(const std::string& houseFilePath);
 
     void setAlgorithm(AbstractAlgorithm& algorithm) {
         algo = &algorithm;
@@ -45,7 +45,7 @@ public:
         algo->setBatteryMeter(*this);
     }
 
-    void run();
+    void run(const std::string&);
 
     bool isWall(Direction d) const override;
 

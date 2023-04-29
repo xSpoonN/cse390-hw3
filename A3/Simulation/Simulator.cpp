@@ -166,7 +166,7 @@ void Simulator::readHouseFile(const string& houseFilePath) {
 	file_processed = true;
 }
 
-void Simulator::run() {
+void Simulator::run(const std::string& out_path) {
 	/* Ensure the file has been processed - return immediately if not */
 	if (!file_processed) return;
 	const bool debug = false;
@@ -236,7 +236,7 @@ void Simulator::run() {
 		case Step::Finish:
 			++current_battery;
 			step_vector.push_back('F');
-			generate_outfile("FINISHED", step_vector, "out.txt");
+			generate_outfile("FINISHED", step_vector, out_path);
 			if (debug && step_time >= 0) {
 				printhouse();
 			}
@@ -254,7 +254,7 @@ void Simulator::run() {
 		}
 	}
 	/* Robot ran out of steps or battery */
-	generate_outfile(current_battery == 0 ? "DEAD" : "WORKING", step_vector, "out.txt");
+	generate_outfile(current_battery == 0 ? "DEAD" : "WORKING", step_vector, out_path);
 }
 
 bool Simulator::isWall(Direction d) const {

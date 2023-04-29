@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
         }
     }
 
+    int i = 0;
     for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
         for (const auto& house : houses) {
             std::cout << "Running algo " << algo.name() << " on house " << house << std::endl;
@@ -67,7 +68,8 @@ int main(int argc, char** argv) {
             std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
             sim.setAlgorithm(*algorithm);
             std::cout << "After" << "\n";
-            sim.run();
+            std::string out_file = "out" + std::to_string(i++) + ".txt";
+            sim.run(out_file);
         }
     }
 
