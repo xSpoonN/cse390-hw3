@@ -10,7 +10,7 @@ The algorithm dynamically generates a map of the house as it navigates through i
 Data structures:
 - unordered_set **mapped**: stores the coordinates of all the mapped tiles
 - unordered_set **visited**: stores the coordinates of all the mapped tiles that the robot has already visited.
-*- unordered_set **unfinished**: stores the coordinates of a visited tiled that has not been completely cleaned.*
+- *unordered_set **unfinished**: stores the coordinates of a visited tiled that has not been completely cleaned.*
 - unordered_map **returnPath**: stores the most efficient path to return to the starting point.
 - class **Node**: models a position in the house. Stores its coords, its neighbours, and its parent. Note that the coords for the node is not necessarily unique.
 - struct **Position**: simply a struct of the x and y coordinates of a position.
