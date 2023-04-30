@@ -6,9 +6,11 @@
 #include "include/Simulator.h"
 #include "../Common/Symbols.h"
 
-#define err(msg) do { std::ofstream err_outfile(error_out); cout << msg << endl; err_outfile << msg << endl; file.close(); return; } while (false)
+// #define err(msg) do { std::ofstream err_outfile(error_out); cout << msg << endl; err_outfile << msg << endl; file.close(); return; } while (false)
+#define err(msg) do { file.close(); return; } while (false)
 
 using std::cout;
+using std::cerr;
 using std::endl;
 
 inline void Simulator::printhouse() {
@@ -79,9 +81,10 @@ static inline size_t round_up(size_t x, int y) {
 }
 
 inline void Simulator::generate_outfile(string status, const vector<char>& steps) {
-	std::ofstream outfile(house_name + "-" + algo_name + ".txt", std::fstream::trunc);
+	string out_path(house_name + "-" + algo_name + ".txt");
+	std::ofstream outfile(out_path, std::fstream::trunc);
 	if (!outfile.is_open()) {
-		cout << "Simulation finished, but the program failed to open output file" << endl;
+		cerr << "Simulation finished, but the program failed to open output file " << out_path << endl;
 		return;
 	}
 	outfile << "NumSteps = " << current_steps << endl;

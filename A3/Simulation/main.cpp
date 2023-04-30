@@ -2,6 +2,7 @@
 #include <fstream>
 #include <cstring>
 #include <filesystem>
+#include <thread>
 #include "../Common/AlgorithmRegistrar.h"
 #include <dlfcn.h>
 #include "./include/Simulator.h"
@@ -30,7 +31,7 @@ int main(int argc, char** argv) {
     std::vector<string> houses;
     for (const auto& entry : std::filesystem::directory_iterator(housePath)) {
         if (entry.is_regular_file() && (entry.path().extension() == ".house")) {
-            std::cerr << "Found a house" << std::endl;
+            // std::cerr << "Found a house" << std::endl;
             houses.push_back(entry.path().string().c_str());
         }
     }
@@ -55,25 +56,30 @@ int main(int argc, char** argv) {
                 err_outfile << "Error loading algorithm library: No Algorithm Registered!" << std::endl;
                 std::cerr << "Error loading algorithm library: No Algorithm Registered!" << std::endl;
             } else {
-                std::cerr << "Found an algo" << std::endl;
+                // std::cerr << "Found an algo" << std::endl;
                 libraries.push_back(algorithm_handle); 
             }
         }
     }
 
+    std::vector<std::thread> threads;
+
     /* Run Simulation */
     for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
         for (const auto& house : houses) {
-            std::cout << "Running algo " << algo.name() << " on house " << house << std::endl;
-            Simulator sim;
-            sim.readHouseFile(house);
-            std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
-            sim.setAlgorithm(*algorithm);
-            std::string out_file = house.substr(0, house.find_last_of(".")) + "-" + algo.name() + ".txt";
-            std::size_t lastSlash = out_file.find_last_of("/\\"); /* Removes the preceding path from outfile name */
-            if (lastSlash != std::string::npos) out_file = out_file.substr(lastSlash + 1);
-            sim.run();
+            threads.emplace_back([=](){
+                // std::cerr << "Thread [" << std::this_thread::get_id() << "] running algo [" << algo.name() << "] on house [" << house << ']' << std::endl;
+                Simulator sim;
+                sim.readHouseFile(house);
+                std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
+                sim.setAlgorithm(*algorithm);
+                sim.run();
+            });
         }
+    }
+
+    for (auto& t : threads) {
+        t.join();
     }
 
     /* Free Libraries*/
