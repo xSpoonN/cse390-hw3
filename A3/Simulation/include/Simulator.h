@@ -12,6 +12,8 @@ using house = vector<vector<char>>;
 
 class Simulator : public WallsSensor, public DirtSensor, public BatteryMeter {
     AbstractAlgorithm* algo = nullptr;
+    string algo_name = "algo";
+    string house_name = "house";
 
     /* Input info */
     bool file_processed = false;
@@ -31,29 +33,14 @@ class Simulator : public WallsSensor, public DirtSensor, public BatteryMeter {
 
     /* Helper functions */
     size_t remaining_dirt = 0;
-    void generate_outfile(string, const vector<char>&, const string&);
+    void generate_outfile(string, const vector<char>&);
     void printhouse();
 public:
     void readHouseFile(const std::string& houseFilePath);
 
-    void setAlgorithm(AbstractAlgorithm& algorithm) {
-        algo = &algorithm;
-        algo->setMaxSteps(max_steps);
-        algo->setWallsSensor(*this);
-        algo->setDirtSensor(*this);
-        algo->setBatteryMeter(*this);
-        // Get algorithm name
-        for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
-            if (typeid(*(algo.create())) == typeid(algorithm)) std::cerr << algo.name() << std::endl;
-                /* std::cerr << (typeid(*(algo.create())) == typeid(algorithm)) << std::endl; */
-            if (algo.create().get() == &algorithm) {
-                std::cerr << "Match" << std::endl;
-                return;
-            }
-        }
-    }
+    void setAlgorithm(AbstractAlgorithm& algorithm);
 
-    void run(const std::string&);
+    void run();
 
     bool isWall(Direction d) const override;
 

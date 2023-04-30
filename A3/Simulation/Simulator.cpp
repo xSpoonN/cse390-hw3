@@ -78,8 +78,8 @@ static inline size_t round_up(size_t x, int y) {
 	return (x / y) + ((x % y) != 0 ? 1 : 0);
 }
 
-inline void Simulator::generate_outfile(string status, const vector<char>& steps, const string& out_path) {
-	std::ofstream outfile(out_path, std::fstream::trunc);
+inline void Simulator::generate_outfile(string status, const vector<char>& steps) {
+	std::ofstream outfile(house_name + "-" + algo_name + ".txt", std::fstream::trunc);
 	if (!outfile.is_open()) {
 		cout << "Simulation finished, but the program failed to open output file" << endl;
 		return;
@@ -101,12 +101,30 @@ inline void Simulator::generate_outfile(string status, const vector<char>& steps
 	outfile.close();
 }
 
+void Simulator::setAlgorithm(AbstractAlgorithm& algorithm) {
+	algo = &algorithm;
+	algo->setMaxSteps(max_steps);
+	algo->setWallsSensor(*this);
+	algo->setDirtSensor(*this);
+	algo->setBatteryMeter(*this);
+	// Get algorithm name
+	for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
+		if (typeid(*(algo.create())) == typeid(algorithm)) {
+			algo_name = algo.name();
+			// std::cerr << "ALGO NAME: " << algo_name << endl;
+			return;
+		}
+	}
+}
+
 void Simulator::readHouseFile(const string& houseFilePath) {
 	/* Attempt to open the file. */
 	std::ifstream file(houseFilePath);
 	std::string error_out = houseFilePath.substr(0, houseFilePath.find_last_of(".")) + ".error";
 	std::size_t lastSlash = error_out.find_last_of("/\\"); /* Removes the preceding path from house.error */
 	if (lastSlash != std::string::npos) error_out = error_out.substr(lastSlash + 1);
+	house_name = error_out.substr(0, error_out.find_last_of(".")); /* Removes the extension from house.error */
+	// std::cerr << "HOUSE NAME: " << house_name << endl;
 	if (!file.is_open()) err("Invalid File given");
 	string line, value;
 	std::getline(file, line); /* Ignore first line */
@@ -171,7 +189,7 @@ void Simulator::readHouseFile(const string& houseFilePath) {
 	file_processed = true;
 }
 
-void Simulator::run(const std::string& out_path) {
+void Simulator::run() {
 	/* Ensure the file has been processed - return immediately if not */
 	if (!file_processed) return;
 	const bool debug = false;
@@ -246,7 +264,7 @@ void Simulator::run(const std::string& out_path) {
 		case Step::Finish:
 			++current_battery;
 			step_vector.push_back('F');
-			generate_outfile("FINISHED", step_vector, out_path);
+			generate_outfile("FINISHED", step_vector);
 			if (debug && step_time >= 0) {
 				printhouse();
 			}
@@ -267,7 +285,7 @@ void Simulator::run(const std::string& out_path) {
 	}
 
 	/* Robot ran out of steps or battery */
-	generate_outfile(current_battery == 0 ? "DEAD" : "WORKING", step_vector, out_path);
+	generate_outfile(current_battery == 0 ? "DEAD" : "WORKING", step_vector);
 }
 
 bool Simulator::isWall(Direction d) const {

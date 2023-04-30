@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
             std::string out_file = house.substr(0, house.find_last_of(".")) + "-" + algo.name() + ".txt";
             std::size_t lastSlash = out_file.find_last_of("/\\"); /* Removes the preceding path from outfile name */
             if (lastSlash != std::string::npos) out_file = out_file.substr(lastSlash + 1);
-            sim.run(out_file);
+            sim.run();
         }
     }
 
