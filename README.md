@@ -8,7 +8,7 @@
 2. Run `cmake -S . -B build/` to generate Makefiles.
 3. Navigate to the newly created `~/A3/build/`.
 4. Run `make` to build the binaries.
-5. The Simulation binary is located at `~/A3/build/Simulation/Simulation`, and the Algorithm libraries are located at `~/A3/build/Algo_.../libAlgo_X.so`
+5. The Simulation binary is located at `~/A3/build/Simulation/Simulation`, and the Algorithm libraries are located at `~/A3/build/Algo_X/libAlgo_X.so`
 
 ## Running the Program
 To run the simulation: `Simulation [arg1] [arg2] ...`
