@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
             if (max_threads <= 0) max_threads = 10;
             if (printouts) std::cerr << "Setting max threads to " << max_threads << std::endl;
         }
-        else if (std::strstr(argv[i], "-debug") == argv[i]) {
+        else if (std::strstr(argv[i], "-verbose") == argv[i]) {
             printouts = true;
         }
     }
