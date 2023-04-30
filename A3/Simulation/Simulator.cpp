@@ -6,8 +6,7 @@
 #include "include/Simulator.h"
 #include "../Common/Symbols.h"
 
-// #define err(msg) do { std::ofstream err_outfile(error_out); cout << msg << endl; err_outfile << msg << endl; file.close(); return; } while (false)
-#define err(msg) do { file.close(); return; } while (false)
+#define err(msg) do { std::ofstream err_outfile(error_out); err_outfile << msg << endl; file.close(); return; } while (false)
 
 using std::cout;
 using std::cerr;

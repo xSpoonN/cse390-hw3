@@ -1,1 +1,1 @@
-Added multithreading as specified in HW doc
+Added multithreaded simulation. This includes the -num_threads option which specifies the max number of concurrent threads.
