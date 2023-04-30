@@ -21,6 +21,8 @@ public:
 		case Step::East: return Position{ coords.x + 1, coords.y };
 		case Step::South: return Position{ coords.x, coords.y + 1 };
 		case Step::West: return Position{ coords.x - 1, coords.y };
+		case Step::Stay: return Position{ coords.x, coords.y };
+		case Step::Finish: return Position{ coords.x, coords.y };
 		}
 		return Position{ 0, 0 };
 	}
