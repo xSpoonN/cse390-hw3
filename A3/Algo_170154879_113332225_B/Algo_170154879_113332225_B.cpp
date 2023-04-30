@@ -125,6 +125,8 @@ Step Algo_170154879_113332225_B::nextStep() {
 		}
 	}
 
+	std::shuffle(choice.begin(), choice.end(), std::default_random_engine{std::random_device{}()}); /* Shuffle the choice vector to randomize the order of the choices. */
+
 	printVec(choice, "Choice: ");
 	printVec(curPath, "Return Path: ");
 
