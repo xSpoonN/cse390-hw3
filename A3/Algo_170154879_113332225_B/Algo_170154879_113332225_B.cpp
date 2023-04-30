@@ -78,6 +78,7 @@ Step Algo_170154879_113332225_B::nextStep() {
 		printVec(returnQ, "Returning to charger. Path: ");
 		Step d = returnQ.back();
 		resumePath.push_back(opposite(d)); returnQ.pop_back(); /* Consume the return queue and add the opposite to the resume Path*/
+		if (DSensor->dirtLevel() == 0) unfinished.erase(curPos); /* If we're returning and there's no dirt, mark the current node as finished. */
 		curPos = getPos(curPos, d);
 		return d;
 	}
@@ -86,8 +87,7 @@ Step Algo_170154879_113332225_B::nextStep() {
 		if ((BMeter->getBatteryState()) > remainingSteps && remainingSteps > 1) { /* When we're about to run out of steps but have enough battery to do a little more. */
 			resumePath.clear(); retPath.clear(); path.clear(); returnPath.clear(); c = std::make_shared<Node>(start); /* Wipe everything clean to start on other branch. */
 			curPos = Position{ 0,0 }; returnPath = { { {0, 0}, {} } };
-		}
-		else return Step::Stay; /* Charge if we need to. */
+		} else return Step::Stay; /* Charge if we need to. */
 	}
 	if (resumePath.size() > 0) {
 		printVec(resumePath, "Resume Path: ");
@@ -96,8 +96,7 @@ Step Algo_170154879_113332225_B::nextStep() {
 			Step d = resumePath.back(); resumePath.pop_back(); /* Consume the resume path */
 			curPos = getPos(curPos, d);
 			return d;
-		}
-		else {
+		} else {
 			resumePath.clear(); retPath.clear(); path.clear(); returnPath.clear(); c = std::make_shared<Node>(start); /* Wipe everything clean to start on other branch. */
 			curPos = Position{ 0,0 }; returnPath = { { {0, 0}, {} } };
 		}
@@ -119,8 +118,7 @@ Step Algo_170154879_113332225_B::nextStep() {
 		if (dirPath.empty() || dirPath.size() > curPath.size() + 1) { /* If the path to the node is longer than what can be reached through the current node */
 			dirPath = vector<Step>(curPath); // Save the current path
 			dirPath.push_back(opposite(dir)); // Add the opposite Step to the path
-		}
-		else if (curPath.empty() || curPath.size() > dirPath.size() + 1) { /* If the current path is empty or is longer than what can be reached through the other node */
+		} else if (curPath.empty() || curPath.size() > dirPath.size() + 1) { /* If the current path is empty or is longer than what can be reached through the other node */
 			curPath = vector<Step>(dirPath); // Save the path to the node
 			curPath.push_back(dir); // Add the Step to the path 
 		}
@@ -139,8 +137,7 @@ Step Algo_170154879_113332225_B::nextStep() {
 			Step dir = path.back(); path.pop_back(); /* We've fully explored the branch, so start consuming the path stack. */
 			c = c->parent; curPos = c->coords;
 			return dir;
-		}
-		else if (!path.size()) { /* Enclosed Dock. */
+		} else if (!path.size()) { /* Enclosed Dock. */
 			f = true; return Step::Finish;
 		}
 		if (mapped.size() == visited.size() && mapped.size() != 0) { /* If all nodes are visited, we need to return to the charger. */
