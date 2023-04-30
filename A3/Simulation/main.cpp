@@ -3,6 +3,7 @@
 #include <cstring>
 #include <filesystem>
 #include <thread>
+#include <future>
 #include "../Common/AlgorithmRegistrar.h"
 #include <dlfcn.h>
 #include "./include/Simulator.h"
@@ -10,11 +11,12 @@
 /* using AlgorithmPtr = std::unique_ptr<AlgorithmRegistrar>; */
 using std::string;
 
-void run_algo(AbstractAlgorithm& algo, const string& house_path) {
+void run_algo(AbstractAlgorithm& algo, const string& house_path, std::promise<void> promise) {
     std::cout << "thread started" << std::endl;
     Simulator sim;
     sim.readHouseFile(house_path);
     sim.setAlgorithm(algo);
+    promise.set_value();
     sim.run();
 }
 
@@ -76,15 +78,12 @@ int main(int argc, char** argv) {
     /* Run Simulation */
     for(const auto& algo : AlgorithmRegistrar::getAlgorithmRegistrar()) {
         for (const auto& house_path : houses) {
-            // std::cout << "Running algo " << algo.name() << " on house " << house << std::endl;
-            // Simulator sim;
-            // sim.readHouseFile(house);
-            // std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
-            // sim.setAlgorithm(*algorithm);
-            // sim.run();
             std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
-            std::thread thr(run_algo, std::ref(*algorithm), house_path);
+            std::promise<void> promise;
+            std::future<void> future = promise.get_future();
+            std::thread thr(run_algo, std::ref(*algorithm), house_path, std::move(promise));
             std::cout << "Thread " << thr.get_id() << " running algo " << algo.name() << " on house " << house_path << std::endl;
+            future.wait();
             threads.push_back(std::move(thr));
         }
     }
