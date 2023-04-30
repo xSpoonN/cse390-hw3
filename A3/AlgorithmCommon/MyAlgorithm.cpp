@@ -67,8 +67,10 @@ Step MyAlgorithm::nextStep() {
 	--remainingSteps;
 
 	printVec(path, "============================================\nPath Stack: ");
+	/* cout << "CurPos: " << curPos << '\n'; */
 
-	vector<Step>& retPath = returnPath[curPos];
+	if (DSensor->dirtLevel() > 0) visitedUnfinished.insert(curPos); /* If there's dirt, mark the node as unfinished. */
+	vector<Step>& retPath = returnPath[curPos]; /* Shorthand for the returnPath of the current position */
 	if (curPos != Position{ 0,0 } && (BMeter->getBatteryState() < retPath.size() + 2 || remainingSteps < retPath.size() + 2 || returnOverride)) {
 		if (returnQ.size() == 0) returnQ = vector<Step>(retPath);
 		if (returnQ.size() == 1 && returnOverride) { f = true; return returnQ.back(); }
@@ -79,15 +81,25 @@ Step MyAlgorithm::nextStep() {
 		return d;
 	}
 	if (curPos == Position{ 0,0 } && remainingSteps < 2) return Step::Finish;
-	if (curPos == Position{ 0,0 } && (BMeter->getBatteryState() < starting_battery || BMeter->getBatteryState() < 2)) return Step::Stay; /* Charge if we need to. */
+	if (curPos == Position{ 0,0 } && (BMeter->getBatteryState() < starting_battery || BMeter->getBatteryState() < 2)) { 
+		if ((BMeter->getBatteryState()) > remainingSteps && remainingSteps > 1) { 
+			resumePath.clear(); retPath.clear(); path.clear(); returnPath.clear(); c = std::make_shared<Node>(start);
+			curPos = Position{ 0,0 }; returnPath = { { {0, 0}, {} } };
+		}
+		else return Step::Stay; /* Charge if we need to. */ 
+	}
 	if (resumePath.size() > 0) {
 		printVec(resumePath, "Resume Path: ");
-		Step d = resumePath.back(); resumePath.pop_back();
-		curPos = getPos(curPos, d);
-		return d;
+		if (resumePath.size() + 1 < starting_battery / 2 || resumePath.size() + 1 < remainingSteps / 2) {
+			Step d = resumePath.back(); resumePath.pop_back();
+			curPos = getPos(curPos, d);
+			return d;
+		}
+		else resumePath.clear();
 	}
 
 	if (DSensor->dirtLevel() > 0) return Step::Stay; /* If there's dirt stay still */
+	else visitedUnfinished.erase(curPos); /* If there's no dirt, remove the current position from the set of unfinished positions */
 
 	vector<Step> choice; /* Populate the choice vector */
 	vector<Step>& curPath = returnPath[c->coords];
@@ -114,9 +126,13 @@ Step MyAlgorithm::nextStep() {
 
 	/* pchoose gets a priority among the choice for whichever node is not already visited. */
 	const auto pchoose = std::find_if(choice.begin(), choice.end(), [this](Step d) { return visited.find(c->getCoords(d)) == visited.end(); });
-	if (choice.size() == 0 || pchoose == choice.end()) { /* No choice, or if all nodes are visited */
+	std::vector<Step>::iterator pchoose2;
+	if (pchoose == choice.end()) pchoose2 = std::find_if(choice.begin(), choice.end(), [this](Step d) { return visitedUnfinished.find(c->getCoords(d)) != visitedUnfinished.end(); });
+	if (choice.size() == 0 || (pchoose == choice.end() && pchoose2 == choice.end())) { /* No choice, or if all nodes are visited */
 		if (path.size() == 1) {
 			f = true; return path.back(); /* Either we're in an enclosed area or we are done. */
+		} else if (path.size() == 0) {
+			f = true; return Step::Finish; /* Enclosed Dock. */
 		}
 		if (mapped.size() == visited.size() && mapped.size() != 0) {
 			if (returnPath[c->coords].size() == 1) {
@@ -131,7 +147,7 @@ Step MyAlgorithm::nextStep() {
 		c = c->parent; curPos = c->coords;
 		return dir;
 	}
-	const auto ind = pchoose - choice.begin();
+	const auto ind = (pchoose != choice.end() ? pchoose : pchoose2) - choice.begin();
 	visited.insert(c->getCoords(choice[ind])); /* Mark the node as visited */
 	c = c->nb[ind]; curPos = c->coords; /* Sets the current node to the node we're visiting */
 	path.push_back(opposite(choice[ind])); /* Return path */

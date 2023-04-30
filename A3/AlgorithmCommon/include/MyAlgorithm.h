@@ -35,17 +35,19 @@ class MyAlgorithm : public AbstractAlgorithm {
     const BatteryMeter* BMeter = nullptr;
 
     Node start;
-    vector<Step> path; /* A path back to the charger */
-    unordered_set<Position, PositionHasher> mapped; /* Vector of nodes the robot knows about */
-    unordered_set<Position, PositionHasher> visited; /* Vector of nodes the robot has visited */
+    vector<Step> path;                                                /* A path back to the charger */
+    unordered_set<Position, PositionHasher> mapped;                   /* Vector of nodes the robot knows about */
+    unordered_set<Position, PositionHasher> visited;                  /* Vector of nodes the robot has visited */
+    unordered_set<Position, PositionHasher> visitedUnfinished;        /* Vector of nodes the robot has visited but not finished cleaning */
     unordered_map<Position, vector<Step>, PositionHasher> returnPath; /* Map of the most efficient return path from each node. */
-    vector<Step> returnQ; /* A queue of Steps to return to the charger */
-    vector<Step> resumePath; /* A path back to the previous position */
-    Position curPos; /* This is redundant most of the time but helps a LOT with the return algorithm */
-    shared_ptr<Node> c; /* Current node */
+    vector<Step> returnQ;                                             /* A queue of Steps to return to the charger */
+    vector<Step> resumePath;                                          /* A path back to the previous position */
+    Position curPos;                                                  /* This is redundant most of the time but helps a LOT with the return algorithm */
+    shared_ptr<Node> c;                                               /* Current node */
     size_t starting_battery;
     bool f; /* True if finished, false otherwise */
     bool returnOverride;
+
 public:
 
     MyAlgorithm();
