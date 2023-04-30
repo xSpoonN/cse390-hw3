@@ -10,11 +10,13 @@
 /* using AlgorithmPtr = std::unique_ptr<AlgorithmRegistrar>; */
 using std::string;
 
-void run_algo(AbstractAlgorithm& algo, const string& house_path) {
+void run_algo(void* algo, const string& house_path) {
     std::cout << "thread started" << std::endl;
     Simulator sim;
     sim.readHouseFile(house_path);
-    sim.setAlgorithm(algo);
+    // Treat algo as a AlgorithmRegistrar::AlgorithmFactoryPair and call sim.setAlgorithm() on it
+    auto& algo_pair = *reinterpret_cast<AlgorithmRegistrar::AlgorithmFactoryPair*>(algo);
+    sim.setAlgorithm(*(algo.create()));
     sim.run();
 }
 
@@ -82,8 +84,8 @@ int main(int argc, char** argv) {
             // std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
             // sim.setAlgorithm(*algorithm);
             // sim.run();
-            std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
-            std::thread thr(run_algo, std::ref(*algorithm), house_path);
+            // std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
+            std::thread thr(run_algo, algo, house_path);
             std::cout << "Thread " << thr.get_id() << " running algo " << algo.name() << " on house " << house_path << std::endl;
             threads.push_back(std::move(thr));
         }
