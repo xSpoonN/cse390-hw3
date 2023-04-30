@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "../../Common/AbstractAlgorithm.h"
+#include "../../AlgorithmCommon/AlgorithmRegistration.h"
 
 using std::vector;
 using std::size_t;
@@ -41,6 +42,15 @@ public:
         algo->setWallsSensor(*this);
         algo->setDirtSensor(*this);
         algo->setBatteryMeter(*this);
+        // Get algorithm name
+        for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
+            if (typeid(*(algo.create())) == typeid(algorithm)) std::cerr << algo.name() << std::endl;
+                /* std::cerr << (typeid(*(algo.create())) == typeid(algorithm)) << std::endl; */
+            if (algo.create().get() == &algorithm) {
+                std::cerr << "Match" << std::endl;
+                return;
+            }
+        }
     }
 
     void run(const std::string&);
