@@ -2,12 +2,21 @@
 #include <fstream>
 #include <cstring>
 #include <filesystem>
+#include <thread>
 #include "../Common/AlgorithmRegistrar.h"
 #include <dlfcn.h>
 #include "./include/Simulator.h"
 
 /* using AlgorithmPtr = std::unique_ptr<AlgorithmRegistrar>; */
 using std::string;
+
+void run_algo(AbstractAlgorithm& algo, const string& house_path) {
+    std::cout << "thread started" << std::endl;
+    Simulator sim;
+    sim.readHouseFile(house_path);
+    sim.setAlgorithm(algo);
+    sim.run();
+}
 
 int main(int argc, char** argv) {
     std::string house_path = "./";
@@ -61,19 +70,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Create a vector for storing threads
+    std::vector<std::thread> threads;
+
     /* Run Simulation */
-    for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
-        for (const auto& house : houses) {
-            std::cout << "Running algo " << algo.name() << " on house " << house << std::endl;
-            Simulator sim;
-            sim.readHouseFile(house);
+    for(const auto& algo : AlgorithmRegistrar::getAlgorithmRegistrar()) {
+        for (const auto& house_path : houses) {
+            // std::cout << "Running algo " << algo.name() << " on house " << house << std::endl;
+            // Simulator sim;
+            // sim.readHouseFile(house);
+            // std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
+            // sim.setAlgorithm(*algorithm);
+            // sim.run();
             std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
-            sim.setAlgorithm(*algorithm);
-            std::string out_file = house.substr(0, house.find_last_of(".")) + "-" + algo.name() + ".txt";
-            std::size_t lastSlash = out_file.find_last_of("/\\"); /* Removes the preceding path from outfile name */
-            if (lastSlash != std::string::npos) out_file = out_file.substr(lastSlash + 1);
-            sim.run();
+            std::thread thr(run_algo, std::ref(*algorithm), house_path);
+            std::cout << "Thread " << thr.get_id() << " running algo " << algo.name() << " on house " << house_path << std::endl;
+            threads.push_back(std::move(thr));
         }
+    }
+
+    std::cout << "Waiting for all threads to finish running" << std::endl;
+
+    /* Wait for all threads to finish running */
+    for (auto& thr : threads) {
+        thr.join();
     }
 
     /* Free Libraries*/
