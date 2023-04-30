@@ -27,7 +27,7 @@ using std::unordered_map;
 using std::shared_ptr;
 using std::cout;
 
-class MyAlgorithm : public AbstractAlgorithm {
+class Algo_170154879_113332225_A : public AbstractAlgorithm {
     size_t maxSteps;
     size_t remainingSteps;
     const WallsSensor* WSensor = nullptr;
@@ -50,7 +50,7 @@ class MyAlgorithm : public AbstractAlgorithm {
 
 public:
 
-    MyAlgorithm();
+    Algo_170154879_113332225_A();
 
     void setMaxSteps(std::size_t maxSteps) override {
         this->maxSteps = maxSteps;

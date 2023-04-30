@@ -2,7 +2,7 @@
 // Created by Anshuman Funkwal on 3/13/23.
 //
 
-#include "include/MyAlgorithm.h"
+#include "include/Algo_170154879_113332225_A.h"
 #include "../AlgorithmCommon/AlgorithmRegistration.h"
 
 inline Step opposite(Step dir) {
@@ -59,10 +59,10 @@ Position getPos(const Position cur, const Step dir) {
 	}
 }
 
-MyAlgorithm::MyAlgorithm() : maxSteps(0), remainingSteps(0), start(Position{ 0,0 }), mapped{ Position{0,0} }, visited{ Position{0,0} }, returnPath{ {{0, 0}, {}} },
+Algo_170154879_113332225_A::Algo_170154879_113332225_A() : maxSteps(0), remainingSteps(0), start(Position{ 0,0 }), mapped{ Position{0,0} }, visited{ Position{0,0} }, returnPath{ {{0, 0}, {}} },
 curPos{ 0,0 }, c(std::make_shared<Node>(start)), starting_battery(0), f(false), returnOverride(false) {}
 
-Step MyAlgorithm::nextStep() {
+Step Algo_170154879_113332225_A::nextStep() {
 	if (f) return Step::Finish;
 	--remainingSteps;
 
@@ -159,4 +159,4 @@ Step MyAlgorithm::nextStep() {
 	return choice[ind];
 }
 
-REGISTER_ALGORITHM(MyAlgorithm);
+REGISTER_ALGORITHM(Algo_170154879_113332225_A);
