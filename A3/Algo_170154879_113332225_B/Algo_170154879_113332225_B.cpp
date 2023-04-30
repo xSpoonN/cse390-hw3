@@ -96,7 +96,8 @@ Step Algo_170154879_113332225_B::nextStep() {
 			Step d = resumePath.back(); resumePath.pop_back(); /* Consume the resume path */
 			curPos = getPos(curPos, d);
 			return d;
-		} else { 
+		}
+		else {
 			resumePath.clear(); retPath.clear(); path.clear(); returnPath.clear(); c = std::make_shared<Node>(start); /* Wipe everything clean to start on other branch. */
 			curPos = Position{ 0,0 }; returnPath = { { {0, 0}, {} } };
 		}
@@ -107,7 +108,7 @@ Step Algo_170154879_113332225_B::nextStep() {
 
 	vector<Step> choice; /* Populate the choice vector */
 	vector<Step>& curPath = returnPath[c->coords];
-	for (const auto& dir : { Step::North, Step::East, Step::South, Step::West }) {
+	for (const auto& dir : { Step::West, Step::South, Step::East, Step::North }) {
 		if (WSensor->isWall(step_to_direction(dir))) continue; /* If there's a wall, don't add it to the choice vector */
 		Position p = c->getCoords(dir);
 		c->nb.push_back(std::make_shared<Node>(p, c)); /* Add the node to the current node's neighbors */
@@ -125,8 +126,6 @@ Step Algo_170154879_113332225_B::nextStep() {
 		}
 	}
 
-	std::shuffle(choice.begin(), choice.end(), std::default_random_engine{std::random_device{}()}); /* Shuffle the choice vector to randomize the order of the choices. */
-
 	printVec(choice, "Choice: ");
 	printVec(curPath, "Return Path: ");
 
@@ -136,8 +135,12 @@ Step Algo_170154879_113332225_B::nextStep() {
 	if (pchoose == choice.end()) pchoose2 = std::find_if(choice.begin(), choice.end(), [this](Step d) { return unfinished.find(c->getCoords(d)) != unfinished.end(); });
 	if (!choice.size() || (pchoose == choice.end() && pchoose2 == choice.end())) { /* No choice, or if all nodes are visited */
 		if (path.size() == 1) { /* Either we're in an enclosed area or we are done. */
-			f = true; return path.back();
-		} else if (!path.size()) { /* Enclosed Dock. */
+			if (mapped.size() == visited.size() && mapped.size() != 0) f = true;
+			Step dir = path.back(); path.pop_back(); /* We've fully explored the branch, so start consuming the path stack. */
+			c = c->parent; curPos = c->coords;
+			return dir;
+		}
+		else if (!path.size()) { /* Enclosed Dock. */
 			f = true; return Step::Finish;
 		}
 		if (mapped.size() == visited.size() && mapped.size() != 0) { /* If all nodes are visited, we need to return to the charger. */

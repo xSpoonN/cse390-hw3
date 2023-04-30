@@ -134,7 +134,10 @@ Step Algo_170154879_113332225_A::nextStep() {
 	if (pchoose == choice.end()) pchoose2 = std::find_if(choice.begin(), choice.end(), [this](Step d) { return unfinished.find(c->getCoords(d)) != unfinished.end(); });
 	if (!choice.size() || (pchoose == choice.end() && pchoose2 == choice.end())) { /* No choice, or if all nodes are visited */
 		if (path.size() == 1) { /* Either we're in an enclosed area or we are done. */
-			f = true; return path.back();
+			if (mapped.size() == visited.size() && mapped.size() != 0) f = true;
+			Step dir = path.back(); path.pop_back(); /* We've fully explored the branch, so start consuming the path stack. */
+			c = c->parent; curPos = c->coords;
+			return dir;
 		} else if (!path.size()) { /* Enclosed Dock. */
 			f = true; return Step::Finish;
 		}
