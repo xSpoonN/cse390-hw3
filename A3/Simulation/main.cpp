@@ -17,6 +17,7 @@ int main(int argc, char** argv) {
     std::string house_path = "./";
     std::string algo_path = "./";
     int max_threads = 10;
+    bool multithreading = true;
 
     /* Parse Command Line Arguments */
     for (int i = 1; i < argc; i++) {
@@ -30,7 +31,8 @@ int main(int argc, char** argv) {
         }
         else if (std::strstr(argv[i], "-num_threads=") == argv[i]) {
             max_threads = std::stoi(std::string(argv[i]).substr(std::strlen("-num_threads=")));
-            if (max_threads <= 0) max_threads = 10;
+            if (max_threads == 0) multithreading = false;
+            if (max_threads < 0) max_threads = 10;
             if (printouts) std::cerr << "Setting max threads to " << max_threads << std::endl;
         }
     }
@@ -73,45 +75,59 @@ int main(int argc, char** argv) {
         }
     }
 
-    /* Set up multithreading variables/mutexes */
-    std::vector<std::thread> threads;
-    std::mutex mut;
-    std::mutex cerr_mut;
-    std::condition_variable cv;
-    int current_threads = 0;
+    if (multithreading) {
+        /* Set up multithreading variables/mutexes */
+        std::vector<std::thread> threads;
+        std::mutex mut;
+        std::mutex cerr_mut;
+        std::condition_variable cv;
+        int current_threads = 0;
 
-    /* Run Simulation */
-    for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
-        for (const auto& house : houses) {
-            /* Ensure that we haven't created more than the max # threads */
-            std::unique_lock<std::mutex> lock(mut);
-            while (current_threads >= max_threads) cv.wait(lock);
-            ++current_threads;
+        /* Run Simulation */
+        for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
+            for (const auto& house : houses) {
+                /* Ensure that we haven't created more than the max # threads */
+                std::unique_lock<std::mutex> lock(mut);
+                while (current_threads >= max_threads) cv.wait(lock);
+                ++current_threads;
 
-            /* Create a thread and run the simulator */
-            threads.emplace_back([=, &current_threads, &mut, &cv, &cerr_mut](){
-                /* Print thread, algo, and house info to stderr */
-                if (printouts) {
-                    std::lock_guard<std::mutex> lock(cerr_mut);
-                    std::cerr << "Thread [" << std::this_thread::get_id() << "] running algo [" << algo.name() << "] on house [" << house << ']' << std::endl;
-                }
-                /* Actually run the simulator */
+                /* Create a thread and run the simulator */
+                threads.emplace_back([=, &current_threads, &mut, &cv, &cerr_mut](){
+                    /* Print thread, algo, and house info to stderr */
+                    if (printouts) {
+                        std::lock_guard<std::mutex> lock(cerr_mut);
+                        std::cerr << "Thread [" << std::this_thread::get_id() << "] running algo [" << algo.name() << "] on house [" << house << ']' << std::endl;
+                    }
+                    /* Actually run the simulator */
+                    Simulator sim;
+                    sim.readHouseFile(house);
+                    std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
+                    sim.setAlgorithm(*algorithm);
+                    sim.run();
+                    /* When finished, decrement current_threads counter */
+                    { std::lock_guard<std::mutex> lock(mut); --current_threads; }
+                    /* Notify main thread */
+                    cv.notify_one();
+                });
+            }
+        }
+
+        /* Wait for all threads to finish */
+        for (auto& t : threads) {
+            t.join();
+        }
+
+    } else {
+        /* Run Simulation */
+        for(const auto& algo: AlgorithmRegistrar::getAlgorithmRegistrar()) {
+            for (const auto& house : houses) {
                 Simulator sim;
                 sim.readHouseFile(house);
                 std::unique_ptr<AbstractAlgorithm> algorithm = algo.create();
                 sim.setAlgorithm(*algorithm);
                 sim.run();
-                /* When finished, decrement current_threads counter */
-                { std::lock_guard<std::mutex> lock(mut); --current_threads; }
-                /* Notify main thread */
-                cv.notify_one();
-            });
+            }
         }
-    }
-
-    /* Wait for all threads to finish */
-    for (auto& t : threads) {
-        t.join();
     }
 
     /* Free Libraries*/
