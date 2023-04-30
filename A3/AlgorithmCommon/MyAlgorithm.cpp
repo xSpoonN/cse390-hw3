@@ -67,36 +67,37 @@ Step MyAlgorithm::nextStep() {
 	--remainingSteps;
 
 	printVec(path, "============================================\nPath Stack: ");
-	/* cout << "CurPos: " << curPos << '\n';  */
 
-	if (DSensor->dirtLevel() > 0) unfinished.insert(curPos); /* If there's dirt, mark the node as unfinished. */
+	if (DSensor->dirtLevel() > 0) unfinished.insert(curPos); /* If there's dirt, mark the current node as unfinished. */
 	vector<Step>& retPath = returnPath[curPos]; /* Shorthand for the returnPath of the current position */
+
+	/* If we're not at the dock, and we're going to run out of battery. Or returnOverride */
 	if (curPos != Position{ 0,0 } && (BMeter->getBatteryState() < retPath.size() + 2 || remainingSteps < retPath.size() + 2 || returnOverride)) {
-		if (returnQ.size() == 0) returnQ = vector<Step>(retPath);
-		if (returnQ.size() == 1 && returnOverride) { f = true; return returnQ.back(); }
+		if (returnQ.size() == 0) returnQ = vector<Step>(retPath); /* If we haven't started returning yet, initialize the return path queue. */
+		if (returnQ.size() == 1 && returnOverride) { f = true; return returnQ.back(); } /* For when we're right next to the dock during returnOverride, queue up an f flag */
 		printVec(returnQ, "Returning to charger. Path: ");
 		Step d = returnQ.back();
-		resumePath.push_back(opposite(d)); returnQ.pop_back();
+		resumePath.push_back(opposite(d)); returnQ.pop_back(); /* Consume the return queue and add the opposite to the resume Path*/
 		curPos = getPos(curPos, d);
 		return d;
 	}
-	if (curPos == Position{ 0,0 } && (remainingSteps < 2 || starting_battery < 2)) return Step::Finish;
-	if (curPos == Position{ 0,0 } && (BMeter->getBatteryState() < starting_battery || BMeter->getBatteryState() < 2)) {
-		if ((BMeter->getBatteryState()) > remainingSteps && remainingSteps > 1) {
-			resumePath.clear(); retPath.clear(); path.clear(); returnPath.clear(); c = std::make_shared<Node>(start);
+	if (curPos == Position{ 0,0 } && (remainingSteps < 2 || starting_battery < 2)) return Step::Finish; /* We're at the dock and can't do anything meaningful. */
+	if (curPos == Position{ 0,0 } && (BMeter->getBatteryState() < starting_battery || BMeter->getBatteryState() < 2)) { /* At dock and need to charge. */
+		if ((BMeter->getBatteryState()) > remainingSteps && remainingSteps > 1) { /* When we're about to run out of steps but have enough battery to do a little more. */
+			resumePath.clear(); retPath.clear(); path.clear(); returnPath.clear(); c = std::make_shared<Node>(start); /* Wipe everything clean to start on other branch. */
 			curPos = Position{ 0,0 }; returnPath = { { {0, 0}, {} } };
 		}
 		else return Step::Stay; /* Charge if we need to. */
 	}
 	if (resumePath.size() > 0) {
 		printVec(resumePath, "Resume Path: ");
-		size_t resumePathSize = (unfinished.size() > 0) ? resumePath.size() - 1 : resumePath.size();
-		if (resumePathSize < starting_battery / 2 && resumePathSize < remainingSteps / 2) {
-			Step d = resumePath.back(); resumePath.pop_back();
+		size_t resumePathSize = (unfinished.size() > 0) ? resumePath.size() - 1 : resumePath.size(); /* If there's unfinished positions, don't count the last step. */
+		if (resumePathSize < starting_battery / 2 && resumePathSize < remainingSteps / 2) { /* We have enough battery to finish the resume path. */
+			Step d = resumePath.back(); resumePath.pop_back(); /* Consume the resume path */
 			curPos = getPos(curPos, d);
 			return d;
-		}  else { 
-			resumePath.clear(); retPath.clear(); path.clear(); returnPath.clear(); c = std::make_shared<Node>(start);
+		} else { 
+			resumePath.clear(); retPath.clear(); path.clear(); returnPath.clear(); c = std::make_shared<Node>(start); /* Wipe everything clean to start on other branch. */
 			curPos = Position{ 0,0 }; returnPath = { { {0, 0}, {} } };
 		}
 	}
@@ -107,9 +108,9 @@ Step MyAlgorithm::nextStep() {
 	vector<Step> choice; /* Populate the choice vector */
 	vector<Step>& curPath = returnPath[c->coords];
 	for (const auto& dir : { Step::North, Step::East, Step::South, Step::West }) {
-		if (WSensor->isWall(step_to_direction(dir))) continue; /* If there's a wall, don't add it to the choice vector */  // might break
+		if (WSensor->isWall(step_to_direction(dir))) continue; /* If there's a wall, don't add it to the choice vector */
 		Position p = c->getCoords(dir);
-		c->nb.push_back(std::make_shared<Node>(p, c));
+		c->nb.push_back(std::make_shared<Node>(p, c)); /* Add the node to the current node's neighbors */
 		choice.push_back(dir);
 		mapped.insert(p);
 
@@ -128,18 +129,17 @@ Step MyAlgorithm::nextStep() {
 	printVec(curPath, "Return Path: ");
 
 	/* pchoose gets a priority among the choice for whichever node is not already visited. */
-	const auto pchoose = std::find_if(choice.begin(), choice.end(), [this](Step d) { return visited.find(c->getCoords(d)) == visited.end(); });
-	std::vector<Step>::iterator pchoose2;
+	const auto& pchoose = std::find_if(choice.begin(), choice.end(), [this](Step d) { return visited.find(c->getCoords(d)) == visited.end(); });
+	std::vector<Step>::iterator pchoose2; /* pchoose2 when all the choices are visited, get a priority for those that are visited but unfinished cleaning. */
 	if (pchoose == choice.end()) pchoose2 = std::find_if(choice.begin(), choice.end(), [this](Step d) { return unfinished.find(c->getCoords(d)) != unfinished.end(); });
-	if (choice.size() == 0 || (pchoose == choice.end() && pchoose2 == choice.end())) { /* No choice, or if all nodes are visited */
-		if (path.size() == 1) {
-			f = true; return path.back(); /* Either we're in an enclosed area or we are done. */
+	if (!choice.size() || (pchoose == choice.end() && pchoose2 == choice.end())) { /* No choice, or if all nodes are visited */
+		if (path.size() == 1) { /* Either we're in an enclosed area or we are done. */
+			f = true; return path.back();
+		} else if (!path.size()) { /* Enclosed Dock. */
+			f = true; return Step::Finish;
 		}
-		else if (path.size() == 0) {
-			f = true; return Step::Finish; /* Enclosed Dock. */
-		}
-		if (mapped.size() == visited.size() && mapped.size() != 0) {
-			if (returnPath[c->coords].size() == 1) {
+		if (mapped.size() == visited.size() && mapped.size() != 0) { /* If all nodes are visited, we need to return to the charger. */
+			if (returnPath[c->coords].size() == 1) { /* If we're next to the charger, queue up an f flag. */
 				f = true; return returnPath[c->coords].back();
 			}
 			returnOverride = true;
@@ -147,7 +147,7 @@ Step MyAlgorithm::nextStep() {
 			curPos = getPos(curPos, d);
 			return d;
 		}
-		Step dir = path.back(); path.pop_back(); /* or we've fully explored the branch, so start consuming the path stack. */
+		Step dir = path.back(); path.pop_back(); /* We've fully explored the branch, so start consuming the path stack. */
 		c = c->parent; curPos = c->coords;
 		return dir;
 	}
