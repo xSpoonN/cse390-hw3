@@ -12,7 +12,7 @@
 using std::string;
 
 int main(int argc, char** argv) {
-    const bool printouts = true;
+    bool printouts = false;
     /* Default values */
     std::string house_path = "./";
     std::string algo_path = "./";
@@ -32,6 +32,9 @@ int main(int argc, char** argv) {
             max_threads = std::stoi(std::string(argv[i]).substr(std::strlen("-num_threads=")));
             if (max_threads <= 0) max_threads = 10;
             if (printouts) std::cerr << "Setting max threads to " << max_threads << std::endl;
+        }
+        else if (std::strstr(argv[i], "-debug") == argv[i]) {
+            printouts = true;
         }
     }
 
