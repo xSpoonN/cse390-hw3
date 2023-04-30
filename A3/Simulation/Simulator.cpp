@@ -197,6 +197,7 @@ void Simulator::run(const std::string& out_path) {
 
 		/* Update current position based on Step received */
 		Step dir = algo->nextStep();
+		if (dir == Step::Finish) --current_steps; /* Don't count Finish as a step */
 		if (model[current_row][current_col] != Sym::CHARGER || dir != Step::Stay) --current_battery;
 		if (debug) cout << endl << endl << "Step: " << step_to_string(dir) << endl;
 		switch (dir) {
