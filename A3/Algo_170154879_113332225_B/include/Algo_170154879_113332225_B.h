@@ -18,7 +18,6 @@
 #include "Position.h"
 #include "Node.h"
 
-
 using std::size_t;
 using std::vector;
 using std::pair;
@@ -34,6 +33,7 @@ class Algo_170154879_113332225_B : public AbstractAlgorithm {
     const DirtSensor* DSensor = nullptr;
     const BatteryMeter* BMeter = nullptr;
 
+    size_t csteps;
     Node start;
     vector<Step> path;                                                /* A path back to the charger */
     unordered_set<Position, PositionHasher> mapped;                   /* Vector of nodes the robot knows about */

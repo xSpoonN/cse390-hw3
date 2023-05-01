@@ -4,69 +4,28 @@
 
 #include "include/Algo_170154879_113332225_B.h"
 #include "../AlgorithmCommon/AlgorithmRegistration.h"
+#include "include/Algo_Helpers.h"
+#include <random>
+#include <ctime>
 
-inline Step opposite(Step dir) {
-	switch (dir) {
-	case Step::North: return Step::South;
-	case Step::East: return Step::West;
-	case Step::South: return Step::North;
-	case Step::West: return Step::East;
-	default: throw ([&](void***) {}); /* Should never reach this line */
-	}
-}
-
-inline Direction step_to_direction(Step s) {
-	switch (s) {
-	case Step::North: return Direction::North;
-	case Step::South: return Direction::South;
-	case Step::East: return Direction::East;
-	case Step::West: return Direction::West;
-	default: throw ([&](void***) {}); /* Should never reach this line */
-	}
-}
-
-inline std::string step_to_string(Step s) {
-	switch (s) {
-	case Step::North: return "North";
-	case Step::East: return "East";
-	case Step::South: return "South";
-	case Step::West: return "West";
-	case Step::Stay: return "Stay";
-	case Step::Finish: return "Finish";
-	default: return "?";
-	}
-}
-
-inline std::ostream& operator<<(std::ostream& os, Step dir) {
-	os << step_to_string(dir); return os;
-}
-
-template <typename T>
-void printVec(const vector<T>& v, const std::string& label = "") noexcept {
-	return;
-	cout << label << "[ ";
-	for (const auto& elem : v) { cout << elem; if (&elem != &v.back()) cout << ", "; }
-	cout << " ]" << '\n';
-}
-
-Position getPos(const Position cur, const Step dir) {
-	switch (dir) {
-	case Step::North: return Position{ cur.x, cur.y - 1 }; break;
-	case Step::East: return Position{ cur.x + 1, cur.y }; break;
-	case Step::South: return Position{ cur.x, cur.y + 1 }; break;
-	case Step::West: return Position{ cur.x - 1, cur.y }; break;
-	default: return Position{ 0,0 };
-	}
-}
-
-Algo_170154879_113332225_B::Algo_170154879_113332225_B() : maxSteps(0), remainingSteps(0), start(Position{ 0,0 }), mapped{ Position{0,0} }, visited{ Position{0,0} }, returnPath{ {{0, 0}, {}} },
-curPos{ 0,0 }, c(std::make_shared<Node>(start)), starting_battery(0), f(false), returnOverride(false) {}
+Algo_170154879_113332225_B::Algo_170154879_113332225_B() : 
+	maxSteps(0),
+	remainingSteps(0),
+	csteps(0),
+	start(Position{ 0,0 }),
+	mapped{ Position{0,0} },
+	visited{ Position{0,0} },
+	returnPath{ {{0, 0}, {}} },
+	curPos{ 0,0 },
+	c(std::make_shared<Node>(start)),
+	starting_battery(0),
+	f(false),
+	returnOverride(false)
+{}
 
 Step Algo_170154879_113332225_B::nextStep() {
 	if (f) return Step::Finish;
 	--remainingSteps;
-
-	printVec(path, "============================================\nPath Stack: ");
 
 	if (DSensor->dirtLevel() > 0) unfinished.insert(curPos); /* If there's dirt, mark the current node as unfinished. */
 	vector<Step>& retPath = returnPath[curPos]; /* Shorthand for the returnPath of the current position */
@@ -75,7 +34,6 @@ Step Algo_170154879_113332225_B::nextStep() {
 	if (curPos != Position{ 0,0 } && (BMeter->getBatteryState() < retPath.size() + 2 || remainingSteps < retPath.size() + 2 || returnOverride)) {
 		if (returnQ.size() == 0) returnQ = vector<Step>(retPath); /* If we haven't started returning yet, initialize the return path queue. */
 		if (returnQ.size() == 1 && returnOverride) { f = true; return returnQ.back(); } /* For when we're right next to the dock during returnOverride, queue up an f flag */
-		printVec(returnQ, "Returning to charger. Path: ");
 		Step d = returnQ.back();
 		resumePath.push_back(opposite(d)); returnQ.pop_back(); /* Consume the return queue and add the opposite to the resume Path*/
 		if (DSensor->dirtLevel() == 0) unfinished.erase(curPos); /* If we're returning and there's no dirt, mark the current node as finished. */
@@ -90,7 +48,6 @@ Step Algo_170154879_113332225_B::nextStep() {
 		} else return Step::Stay; /* Charge if we need to. */
 	}
 	if (resumePath.size() > 0) {
-		printVec(resumePath, "Resume Path: ");
 		size_t resumePathSize = (unfinished.size() > 0) ? resumePath.size() - 1 : resumePath.size(); /* If there's unfinished positions, don't count the last step. */
 		if (resumePathSize < starting_battery / 2 && resumePathSize < remainingSteps / 2) { /* We have enough battery to finish the resume path. */
 			Step d = resumePath.back(); resumePath.pop_back(); /* Consume the resume path */
@@ -107,7 +64,18 @@ Step Algo_170154879_113332225_B::nextStep() {
 
 	vector<Step> choice; /* Populate the choice vector */
 	vector<Step>& curPath = returnPath[c->coords];
-	for (const auto& dir : { Step::West, Step::South, Step::East, Step::North }) {
+	std::srand(std::time(nullptr));
+	vector<Step> choices;
+	while (choices.size() < 4) {
+		switch (std::rand() % 4) {
+			case 0: if (std::find(choices.begin(), choices.end(), Step::East) == choices.end()) choices.push_back(Step::East); break;
+			case 1: if (std::find(choices.begin(), choices.end(), Step::West) == choices.end()) choices.push_back(Step::West); break;
+			case 2: if (std::find(choices.begin(), choices.end(), Step::North) == choices.end()) choices.push_back(Step::North); break;
+			case 3: if (std::find(choices.begin(), choices.end(), Step::South) == choices.end()) choices.push_back(Step::South); break;
+		}
+	}
+
+	for (const auto& dir : choices) {
 		if (WSensor->isWall(step_to_direction(dir))) continue; /* If there's a wall, don't add it to the choice vector */
 		Position p = c->getCoords(dir);
 		c->nb.push_back(std::make_shared<Node>(p, c)); /* Add the node to the current node's neighbors */
@@ -123,9 +91,6 @@ Step Algo_170154879_113332225_B::nextStep() {
 			curPath.push_back(dir); // Add the Step to the path 
 		}
 	}
-
-	printVec(choice, "Choice: ");
-	printVec(curPath, "Return Path: ");
 
 	/* pchoose gets a priority among the choice for whichever node is not already visited. */
 	const auto& pchoose = std::find_if(choice.begin(), choice.end(), [this](Step d) { return visited.find(c->getCoords(d)) == visited.end(); });
