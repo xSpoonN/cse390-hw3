@@ -67,3 +67,5 @@ Throughout this procedure we need the variable **curPos** which keeps track of t
 In order to further optimize returning to the charger, we compare the sizes of **mapped** and **visited**. If these two are ever the same, it means that we have already visited all the visitable nodes, and so we can return to charger using the more optimized **returnPath** rather than the **path** stack.
 
 There are no uses of unique_ptr in this solution. This is because of the way we are keeping track of the current node. We are using **c** to traverse the generated graph, so it is incompatible with unique_ptr.
+
+Our second algorithm is derived from the first, but it has a few optimizations to code quality and also makes use of randomness if it finds itself at a crossroad.
