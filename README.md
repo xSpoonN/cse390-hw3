@@ -3,6 +3,24 @@
 > James Leonardi - <james.leonardi@stonybrook.edu>\
 > Kevin Tao - <kevin.tao@stonybrook.edu>
 
+## Build Instructions
+1. Navigate to `~/A3/`.
+2. Run `cmake -S . -B build/` to generate Makefiles.
+3. Navigate to the newly created `~/A3/build/`.
+4. Run `make` to build the binaries.
+5. The Simulation binary is located at `~/A3/build/Simulation/Simulation`, and the Algorithm libraries are located at `~/A3/build/Algo_X/libAlgo_X.so`
+
+## Running the Program
+To run the simulation: `Simulation [arg1] [arg2] ...`
+
+The program supports the following arguments:
+- `-house_path=<filepath>`: Specify a directory to search for .house files. Default: CWD
+- `-algo_path=<filepath>`: Specify a directory to search for .so files. Default: CWD
+- `-num_threads=<int>`: Specify the max number of concurrent threads to execute. Default: 10
+- `-verbose`: Show a printout when a thread is started, containing the thread ID, algorithm name, and house name.
+
+The args can be given in any order. In case of repeat args, the rightmost value is used.
+
 ## Solution Approach
 
 ### Main Algorithm
@@ -49,10 +67,3 @@ Throughout this procedure we need the variable **curPos** which keeps track of t
 In order to further optimize returning to the charger, we compare the sizes of **mapped** and **visited**. If these two are ever the same, it means that we have already visited all the visitable nodes, and so we can return to charger using the more optimized **returnPath** rather than the **path** stack.
 
 There are no uses of unique_ptr in this solution. This is because of the way we are keeping track of the current node. We are using **c** to traverse the generated graph, so it is incompatible with unique_ptr.
-
-## Build Instructions
-1. Navigate to `~/A3/`.
-2. Run `cmake -S . -B build/` to generate Makefiles.
-3. Navigate to the newly created `~/A3/build/`.
-4. Run `make` to build the binaries.
-5. The Simulation binary is located at `~/A3/build/Simulation/Simulation`, and the Algorithm libraries are located at `~/A3/build/Algo_.../libAlgo_X.so`
